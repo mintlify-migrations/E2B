@@ -4,6 +4,7 @@ from typing import Optional, Dict, List
 from packaging.version import Version
 from typing_extensions import Unpack
 
+from e2b.api.client.types import UNSET
 from e2b.sandbox.sandbox_api import SandboxInfo, SandboxMetrics, SandboxQuery
 from e2b.sandbox.main import SandboxBase
 from e2b.exceptions import TemplateException, SandboxException, NotFoundException
@@ -13,10 +14,12 @@ from e2b.api.client.models import (
     PostSandboxesSandboxIDTimeoutBody,
     Error,
     ResumedSandbox,
+    ClonedSandbox,
 )
 from e2b.api.client.api.sandboxes import (
     get_sandboxes_sandbox_id,
     post_sandboxes_sandbox_id_timeout,
+    post_sandboxes_sandbox_id_clone,
     delete_sandboxes_sandbox_id,
     post_sandboxes,
     get_sandboxes_sandbox_id_metrics,
@@ -315,3 +318,41 @@ class SandboxApi(SandboxBase):
                 raise handle_api_exception(res)
 
         return sandbox_id
+
+    @classmethod
+    def _cls_clone(
+        cls,
+        sandbox_id: str,
+        timeout: Optional[int] = None,
+        **opts: Unpack[ApiParams],
+    ) -> SandboxCreateResponse:
+        config = ConnectionConfig(**opts)
+
+        with ApiClient(
+            config,
+            limits=SandboxBase._limits,
+        ) as api_client:
+            res = post_sandboxes_sandbox_id_clone.sync_detailed(
+                sandbox_id,
+                client=api_client,
+                body=ClonedSandbox(timeout=timeout or UNSET),
+            )
+
+            if res.status_code == 404:
+                raise NotFoundException(f"Sandbox {sandbox_id} not found")
+
+            if res.status_code >= 300:
+                raise handle_api_exception(res)
+
+            if res.parsed is None:
+                raise Exception("Body of the request is None")
+
+            if isinstance(res.parsed, Error):
+                raise SandboxException(f"{res.parsed.message}: Request failed")
+
+            return SandboxCreateResponse(
+                sandbox_id=res.parsed.sandbox_id,
+                sandbox_domain=res.parsed.domain,
+                envd_version=res.parsed.envd_version,
+                envd_access_token=res.parsed.envd_access_token,
+            )

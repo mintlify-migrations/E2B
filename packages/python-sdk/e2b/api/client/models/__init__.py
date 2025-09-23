@@ -4,6 +4,7 @@ from .aws_registry import AWSRegistry
 from .aws_registry_type import AWSRegistryType
 from .build_log_entry import BuildLogEntry
 from .build_status_reason import BuildStatusReason
+from .cloned_sandbox import ClonedSandbox
 from .created_access_token import CreatedAccessToken
 from .created_team_api_key import CreatedTeamAPIKey
 from .disk_metrics import DiskMetrics
@@ -57,6 +58,7 @@ __all__ = (
     "AWSRegistryType",
     "BuildLogEntry",
     "BuildStatusReason",
+    "ClonedSandbox",
     "CreatedAccessToken",
     "CreatedTeamAPIKey",
     "DiskMetrics",

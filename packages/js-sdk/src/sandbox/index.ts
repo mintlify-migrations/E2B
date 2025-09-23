@@ -119,9 +119,8 @@ export class Sandbox extends SandboxApi {
     this.sandboxDomain = opts.sandboxDomain ?? this.connectionConfig.domain
 
     this.envdAccessToken = opts.envdAccessToken
-    this.envdApiUrl = `${
-      this.connectionConfig.debug ? 'http' : 'https'
-    }://${this.getHost(this.envdPort)}`
+    this.envdApiUrl = `${this.connectionConfig.debug ? 'http' : 'https'
+      }://${this.getHost(this.envdPort)}`
 
     const rpcTransport = createConnectTransport({
       baseUrl: this.envdApiUrl,
@@ -315,6 +314,14 @@ export class Sandbox extends SandboxApi {
     )
 
     return new this({ ...sandbox, ...config }) as InstanceType<S>
+  }
+
+  static async betaClone<S extends typeof Sandbox>(this: S, sandboxId: string, opts?: Pick<SandboxOpts, 'requestTimeoutMs' | 'timeoutMs'>): Promise<InstanceType<S>> {
+    const sbxInfo = await SandboxApi.cloneSandbox(sandboxId, opts?.timeoutMs ?? DEFAULT_SANDBOX_TIMEOUT_MS, opts)
+
+    const config = new ConnectionConfig(opts)
+
+    return new this({ ...sbxInfo, ...config }) as InstanceType<S>
   }
 
   /**
@@ -514,6 +521,14 @@ export class Sandbox extends SandboxApi {
     return await SandboxApi.betaPause(this.sandboxId, opts)
   }
 
+  async betaClone(opts?: Pick<SandboxOpts, 'requestTimeoutMs' | 'timeoutMs'>): Promise<this> {
+    const sbxInfo = await SandboxApi.cloneSandbox(this.sandboxId, opts?.timeoutMs ?? DEFAULT_SANDBOX_TIMEOUT_MS, opts)
+
+    const Ctor = this.constructor as typeof Sandbox
+
+    return new Ctor({ ...sbxInfo, ...this.connectionConfig }) as this
+  }
+
   /**
    * Get the URL to upload a file to the sandbox.
    *
@@ -631,7 +646,7 @@ export class Sandbox extends SandboxApi {
       if (compareVersions(this.envdApi.version, '0.1.5') < 0) {
         throw new SandboxError(
           'You need to update the template to use the new SDK. ' +
-            'You can do this by running `e2b template build` in the directory with the template.'
+          'You can do this by running `e2b template build` in the directory with the template.'
         )
       }
 

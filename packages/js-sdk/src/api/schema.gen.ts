@@ -137,6 +137,52 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/sandboxes/{sandboxID}/clone': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** @description Clone the sandbox */
+    post: {
+      parameters: {
+        query?: never
+        header?: never
+        path: {
+          sandboxID: components['parameters']['sandboxID']
+        }
+        cookie?: never
+      }
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['ClonedSandbox']
+        }
+      }
+      responses: {
+        /** @description The sandbox was cloned successfully */
+        201: {
+          headers: {
+            [name: string]: unknown
+          }
+          content: {
+            'application/json': components['schemas']['Sandbox']
+          }
+        }
+        401: components['responses']['401']
+        404: components['responses']['404']
+        409: components['responses']['409']
+        500: components['responses']['500']
+      }
+    }
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/sandboxes/{sandboxID}/logs': {
     parameters: {
       query?: never
@@ -989,6 +1035,14 @@ export interface components {
       message: string
       /** @description Step that failed */
       step?: string
+    }
+    ClonedSandbox: {
+      /**
+       * Format: int32
+       * @description Time to live for the sandbox in seconds.
+       * @default 15
+       */
+      timeout: number
     }
     /**
      * Format: int32

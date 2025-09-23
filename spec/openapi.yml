@@ -612,15 +612,15 @@ components:
 
     FromImageRegistry:
       oneOf:
-        - $ref: '#/components/schemas/AWSRegistry'
-        - $ref: '#/components/schemas/GCPRegistry'
-        - $ref: '#/components/schemas/GeneralRegistry'
+        - $ref: "#/components/schemas/AWSRegistry"
+        - $ref: "#/components/schemas/GCPRegistry"
+        - $ref: "#/components/schemas/GeneralRegistry"
       discriminator:
         propertyName: type
         mapping:
-          aws: '#/components/schemas/AWSRegistry'
-          gcp: '#/components/schemas/GCPRegistry'
-          registry: '#/components/schemas/GeneralRegistry'
+          aws: "#/components/schemas/AWSRegistry"
+          gcp: "#/components/schemas/GCPRegistry"
+          registry: "#/components/schemas/GeneralRegistry"
 
     AWSRegistry:
       type: object
@@ -905,8 +905,8 @@ components:
           type: string
           description: Identifier of the node
         serviceInstanceID:
-            type: string
-            description: Service instance identifier of the node
+          type: string
+          description: Service instance identifier of the node
         clusterID:
           type: string
           description: Identifier of the cluster
@@ -959,8 +959,8 @@ components:
           type: string
           description: Identifier of the node
         serviceInstanceID:
-            type: string
-            description: Service instance identifier of the node
+          type: string
+          description: Service instance identifier of the node
         nodeID:
           type: string
           deprecated: true
@@ -1133,6 +1133,15 @@ components:
         maskedValueSuffix:
           type: string
           description: Suffix used in masked version of the token or key
+
+    ClonedSandbox:
+      properties:
+        timeout:
+          type: integer
+          format: int32
+          minimum: 0
+          default: 15
+          description: Time to live for the sandbox in seconds.
 
 tags:
   - name: templates
@@ -1531,6 +1540,38 @@ paths:
       responses:
         "201":
           description: The sandbox was resumed successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Sandbox"
+        "409":
+          $ref: "#/components/responses/409"
+        "404":
+          $ref: "#/components/responses/404"
+        "401":
+          $ref: "#/components/responses/401"
+        "500":
+          $ref: "#/components/responses/500"
+
+  /sandboxes/{sandboxID}/clone:
+    post:
+      description: Clone the sandbox
+      tags: [sandboxes]
+      security:
+        - ApiKeyAuth: []
+        - Supabase1TokenAuth: []
+          Supabase2TeamAuth: []
+      parameters:
+        - $ref: "#/components/parameters/sandboxID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClonedSandbox"
+      responses:
+        "201":
+          description: The sandbox was cloned successfully
           content:
             application/json:
               schema:

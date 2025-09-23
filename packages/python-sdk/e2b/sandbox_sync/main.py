@@ -585,6 +585,57 @@ class Sandbox(SandboxApi):
             **opts,
         )
 
+    @overload
+    def beta_clone(
+        self,
+        timeout: Optional[int] = None,
+        **opts: Unpack[ApiParams],
+    ) -> Self: ...
+
+    @overload
+    @classmethod
+    def beta_clone(
+        cls,
+        sandbox_id: str,
+        timeout: Optional[int] = None,
+        **opts: Unpack[ApiParams],
+    ) -> Self: ...
+
+    @class_method_variant("_cls_clone")
+    def beta_clone(
+        self,
+        timeout: Optional[int] = None,
+        **opts: Unpack[ApiParams],
+    ) -> Self:
+        response = SandboxApi._cls_clone(
+            sandbox_id=self.sandbox_id,
+            timeout=timeout,
+            **opts,
+        )
+
+        extra_sandbox_headers = {}
+
+        sandbox_id = response.sandbox_id
+        sandbox_domain = response.sandbox_domain
+        envd_version = response.envd_version
+        envd_access_token = response.envd_access_token
+
+        if envd_access_token is not None and not isinstance(envd_access_token, Unset):
+            extra_sandbox_headers["X-Access-Token"] = envd_access_token
+
+        connection_config = ConnectionConfig(
+            extra_sandbox_headers=extra_sandbox_headers,
+            **opts,
+        )
+
+        return self.__class__(
+            sandbox_id=sandbox_id,
+            sandbox_domain=sandbox_domain,
+            envd_version=envd_version,
+            envd_access_token=envd_access_token,
+            connection_config=connection_config,
+        )
+
     @classmethod
     def _cls_connect(
         cls,

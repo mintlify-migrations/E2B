@@ -17,7 +17,7 @@ export interface SandboxApiOpts
       ConnectionOpts,
       'apiKey' | 'headers' | 'debug' | 'domain' | 'requestTimeoutMs'
     >
-  > {}
+  > { }
 
 /**
  * Options for creating a new Sandbox.
@@ -217,7 +217,7 @@ export interface SandboxMetrics {
 }
 
 export class SandboxApi {
-  protected constructor() {}
+  protected constructor() { }
 
   /**
    * Kill the sandbox specified by sandbox ID.
@@ -435,6 +435,48 @@ export class SandboxApi {
     return true
   }
 
+  protected static async cloneSandbox(
+    sandboxId: string,
+    timeoutMs: number,
+    opts?: SandboxApiOpts
+  ): Promise<{
+    sandboxId: string
+    sandboxDomain?: string
+    envdVersion: string
+    envdAccessToken?: string
+  }> {
+    const config = new ConnectionConfig(opts)
+    const client = new ApiClient(config)
+
+    const res = await client.api.POST('/sandboxes/{sandboxID}/clone', {
+      params: {
+        path: {
+          sandboxID: sandboxId,
+        },
+      },
+      body: {
+        timeout: timeoutToSeconds(timeoutMs),
+      },
+      signal: config.getSignal(opts?.requestTimeoutMs),
+    })
+
+    if (res.error?.code === 404) {
+      throw new NotFoundError(`Sandbox ${sandboxId} not found`)
+    }
+
+    const err = handleApiError(res)
+    if (err) {
+      throw err
+    }
+
+    return {
+      sandboxId: res.data!.sandboxID,
+      sandboxDomain: res.data!.domain || undefined,
+      envdVersion: res.data!.envdVersion,
+      envdAccessToken: res.data!.envdAccessToken,
+    }
+  }
+
   protected static async createSandbox(
     template: string,
     timeoutMs: number,
@@ -470,7 +512,7 @@ export class SandboxApi {
       await this.kill(res.data!.sandboxID, opts)
       throw new TemplateError(
         'You need to update the template to use the new SDK. ' +
-          'You can do this by running `e2b template build` in the directory with the template.'
+        'You can do this by running `e2b template build` in the directory with the template.'
       )
     }
 
